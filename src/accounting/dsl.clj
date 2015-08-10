@@ -51,6 +51,11 @@
   (let [ bf (get-balances) [balances state] (bf state)]
     [(= (:credit-balances balances) (:debit-balances balances)) state]))
 
+(defn transaction-note
+  [note]
+  (fn [state]
+    ['() (update-in state [:transaction-notes] (fn [_] (conj (:transaction-notes state) note )))]))
+
 ;;;; monad stuff ;;;;;;
 
 (defn >>=
@@ -77,6 +82,10 @@
 (defn get-state
   [state]
   [state state])
+
+(defn get-transaction-notes
+  [state]
+  [(into [] (reverse (:transaction-notes state))) state])
 
 ;; orchestration (one or more applications of m-bind)
 
