@@ -35,3 +35,9 @@
     (let [c (>$> accounting-system-100 buy-van balances-ok?) r (c {})  ok (first r)]
       (is (= ok true)))))
 
+
+(deftest error-condition
+  (testing "Test error condition..."
+    (let [c (>$> accounting-system-100 (cr :blah 30.00)) r (c {}) ok (first r)]
+      (println "ok is" ok)
+      (is (nil? ok )))))

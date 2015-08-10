@@ -6,6 +6,7 @@
 
 ;;; accounting system state monads
 
+
 (defn set-of-books
   [sobid]
   (fn [state]
@@ -18,11 +19,13 @@
            r2 (update-in r1    [:aliases alias] (fn [_] {:id id}))]
       ['() r2])))
 
+; due to the way get works, if aliases does not contain, returns nil as first of the response
 (defn resolve-id
   [idorsym]
   (fn [state]
     [(if (instance? clojure.lang.Keyword idorsym) (:id (get (get state :aliases) idorsym)) idorsym) state]))
 
+; 
 (defn get-account
   [id]
   (fn [state]
@@ -31,7 +34,10 @@
 (defn update-account-balance
   [id balance]
   (fn [state]
-    ['() (update-in state [:accounts id :balance] (fn[_] balance))]))
+    (let [ ok (contains? (:accounts state) id)]
+      (if ok
+        [balance (update-in state [:accounts id :balance] (fn[_] balance))]
+        [nil state]))))
 
 (defn balancer
   [r a]
@@ -58,11 +64,17 @@
 
 ;;;; monad stuff ;;;;;;
 
+;;;;;;;;;; return [nil state] in case error - ideally should use monad composer or transformer
+;;;;;;;;;;; how is error message conveyed ?
+
 (defn >>=
   [mv mf]
   (fn [state]
-    (let [ [v new-state] (mv state) mv2 (mf v)]
-      (mv2 new-state))))
+    (let [ [v new-state] (mv state) ]
+      (if (not (nil? v))
+        (let [mv2 (mf v)]
+          (mv2 new-state))
+        [nil state]))))
 
 (defn build-accounting-system1
   [r form]
